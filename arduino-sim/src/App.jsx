@@ -44,20 +44,20 @@ export default function App() {
   const [calibrating, setCalibrating] = useState(false);
   const [calOverlayVisible, setCalOverlayVisible] = useState(false);
 
-  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"]; 
+  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
 
   const BASE_PIN_GEOMETRY = {
     width: 300,
     height: 200,
-    startX: 115.5,
-    spacing: 10.2,
-    gap: 18.0,
-    y: 35
+    startX: 124.699,
+    spacing: 9.7374,
+    gap: 4.9714,
+    y: 38.8283
   };
 
   const DEFAULT_PIN_NUDGE = {
-    x: 16,
-    y: 2
+    x: 0,
+    y: 0
   };
 
   // Default pin offsets (scale to actual Arduino element size)
@@ -295,7 +295,7 @@ export default function App() {
                   endX = arduino.x + calMapping[pin].x;
                   endY = arduino.y + calMapping[pin].y;
                 } else {
-                  const pinOffset = pinOffsetsRaw[pin] || pinOffsetsRaw["13"];  
+                  const pinOffset = pinOffsetsRaw[pin] || pinOffsetsRaw["13"];
                   endX = arduino.x + pinOffset.x;
                   endY = arduino.y + pinOffset.y;
                 }
@@ -328,8 +328,8 @@ export default function App() {
                     <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />
                     {(comp.type === "LED" || comp.type === "BUTTON") && (
                       <g pointerEvents="none">
-                        <circle cx={intersect.x} cy={intersect.y} r={6} fill="#fff" />
-                        <circle cx={intersect.x} cy={intersect.y} r={3} fill={color} />
+                        <circle cx={intersect.x} cy={intersect.y} r="6" fill="#fff" />
+                        <circle cx={intersect.x} cy={intersect.y} r="3" fill={color} />
                       </g>
                     )}
                   </g>
@@ -341,7 +341,7 @@ export default function App() {
               const maskCY = arduino.y + arefOffset.y;
               return (
                 <g key="aref-mask" pointerEvents="none">
-                  <circle cx={maskCX} cy={maskCY} r={4} fill="#fff" stroke="#d1d5db" strokeWidth="0.6" />
+                  <circle cx={maskCX} cy={maskCY} r="4" fill="#fff" stroke="#d1d5db" strokeWidth="0.6" />
                 </g>
               );
             })()}
@@ -388,7 +388,7 @@ export default function App() {
               {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"}
             </button>
 
-            <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}> 
+            <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}>
               Clear Calibration
             </button>
 
@@ -445,7 +445,8 @@ export default function App() {
         </div>
       </div>
     </Errorboundary>
-} 
+  );
+}
 
 // Draggable component UI (controlled Draggable)
 function DraggableComponent({
