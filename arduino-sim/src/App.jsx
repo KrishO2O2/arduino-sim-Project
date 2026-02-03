@@ -44,7 +44,7 @@ export default function App() {
   const [calibrating, setCalibrating] = useState(false);
   const [calOverlayVisible, setCalOverlayVisible] = useState(false);
 
-  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];  
 
   const BASE_PIN_GEOMETRY = {
     width: 300,
@@ -110,7 +110,7 @@ export default function App() {
   };
 
   const getAvailablePins = (currentComponentId) => {
-    const allPins = ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+    const allPins = ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];  
     const usedPins = components.filter((c) => c.id !== currentComponentId).map((c) => c.pin).filter(Boolean);
     return allPins.filter((p) => !usedPins.includes(p));
   };
@@ -445,125 +445,4 @@ export default function App() {
         </div>
       </div>
     </Errorboundary>
-} 
-
-// Draggable component UI (controlled Draggable)
-function DraggableComponent({
-  data,
-  updatePosition,
-  updatePin,
-  isLedOn,
-  setIsButtonPressed,
-  availablePins,
-  dragDisabled,
-  hasWokwiArduino,
-  hasWokwiLed,
-  hasWokwiButton,
-  onArduinoMeasure
-}) {
-  const nodeRef = useRef(null);
-  const arduinoRef = useRef(null);
-
-  useEffect(() => {
-    if (data.type !== "ARDUINO" || !onArduinoMeasure || !arduinoRef.current || !nodeRef.current) return;
-    const update = () => {
-      if (!arduinoRef.current || !nodeRef.current) return;
-      const cardRect = nodeRef.current.getBoundingClientRect();
-      const arduinoRect = arduinoRef.current.getBoundingClientRect();
-      onArduinoMeasure({
-        width: arduinoRect.width,
-        height: arduinoRect.height,
-        offsetX: arduinoRect.left - cardRect.left,
-        offsetY: arduinoRect.top - cardRect.top
-      });
-    };
-    update();
-    const raf = requestAnimationFrame(update);
-    const timeout = setTimeout(update, 300);
-    window.addEventListener("resize", update);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(timeout);
-      window.removeEventListener("resize", update);
-    };
-  }, [data.type, onArduinoMeasure]);
-
-  // numeric sort for pins, keep non-numeric like "GND" first
-  const pinValue = (p) => {
-    if (p === undefined || p === null) return Number.POSITIVE_INFINITY;
-    if (p === "GND") return -1;
-    const n = parseInt(p, 10);
-    return Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
-  };
-
-  const dropdownOptions = [...new Set([...(availablePins || []), data.pin].filter(Boolean))].sort((a, b) => pinValue(a) - pinValue(b));
-
-  return (
-    <Draggable
-      nodeRef={nodeRef}
-      handle=".drag-handle"
-      position={{ x: data.x, y: data.y }}
-      onDrag={(e, d) => updatePosition(data.id, d.x, d.y)}
-      onStop={(e, d) => updatePosition(data.id, d.x, d.y)}
-      disabled={!!dragDisabled}
-    >
-      <div
-        ref={nodeRef}
-        style={{
-          position: "absolute",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          backgroundColor: "rgba(255,255,255,0.95)",
-          borderRadius: 6,
-          boxShadow: "0 6px 12px rgba(0,0,0,0.12)"
-        }}
-      >
-        <div className="drag-handle" style={{ width: "100%", height: 20, backgroundColor: "#4b5563", borderTopLeftRadius: 6, borderTopRightRadius: 6, cursor: "grab", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: 30, height: 4, backgroundColor: "#9ca3af", borderRadius: 2 }} />
-        </div>
-
-        <div style={{ padding: 10, minWidth: 90 }}>
-          {data.type === "ARDUINO" && (
-            <div ref={arduinoRef} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {hasWokwiArduino ? (
-                <wokwi-arduino-uno></wokwi-arduino-uno>
-              ) : (
-                <div style={{ width: 120, height: 90, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #ddd" }}>Arduino</div>
-              )}
-            </div>
-          )}
-
-          {data.type === "LED" && (
-            <>
-              {hasWokwiLed ? <wokwi-led color="red" value={isLedOn ? 1 : 0}></wokwi-led> : <div style={{ width: 20, height: 20, borderRadius: 10, background: isLedOn ? "red" : "#420000" }} />}
-              <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
-                {dropdownOptions.map((p) => (
-                  <option key={p} value={p}>Pin {p}</option>
-                ))}
-              </select>
-            </>
-          )}
-
-          {data.type === "BUTTON" && (
-            <>
-              <div
-                onPointerDown={() => setIsButtonPressed(true)}
-                onPointerUp={() => setIsButtonPressed(false)}
-                onPointerLeave={() => setIsButtonPressed(false)}
-                style={{ cursor: "pointer", display: "inline-block" }}
-              >
-                {hasWokwiButton ? <wokwi-pushbutton></wokwi-pushbutton> : <div style={{ width: 36, height: 24, background: "#ddd", borderRadius: 4 }} />}
-              </div>
-              <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
-                {dropdownOptions.map((p) => (
-                  <option key={p} value={p}>Pin {p}</option>
-                ))}
-              </select>
-            </>
-          )}
-        </div>
-      </div>
-    </Draggable>
-  );
 }
