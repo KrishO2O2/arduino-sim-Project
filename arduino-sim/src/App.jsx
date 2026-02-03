@@ -55,7 +55,7 @@ export default function App() {
     y: 35
   };
 
-  // Default pin offsets
+  // Default pin offsets (scale to actual Arduino element size)
   const generatePinOffsets = () => {
     const metrics = arduinoVisualMetrics;
     const scaleX = metrics ? metrics.width / BASE_PIN_GEOMETRY.width : 1;
@@ -534,7 +534,9 @@ function DraggableComponent({
             <>
               {hasWokwiLed ? <wokwi-led color="red" value={isLedOn ? 1 : 0}></wokwi-led> : <div style={{ width: 20, height: 20, borderRadius: 10, background: isLedOn ? "red" : "#420000" }} />}
               <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
-                {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)})
+                {dropdownOptions.map((p) => (
+                  <option key={p} value={p}>Pin {p}</option>
+                ))}
               </select>
             </>
           )}
@@ -550,7 +552,9 @@ function DraggableComponent({
                 {hasWokwiButton ? <wokwi-pushbutton></wokwi-pushbutton> : <div style={{ width: 36, height: 24, background: "#ddd", borderRadius: 4 }} />}
               </div>
               <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
-                {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)})
+                {dropdownOptions.map((p) => (
+                  <option key={p} value={p}>Pin {p}</option>
+                ))}
               </select>
             </>
           )}
