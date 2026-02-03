@@ -55,15 +55,20 @@ export default function App() {
     y: 35
   };
 
+  const DEFAULT_PIN_NUDGE = {
+    x: 16,
+    y: 2
+  };
+
   // Default pin offsets (scale to actual Arduino element size)
   const generatePinOffsets = () => {
     const metrics = arduinoVisualMetrics;
     const scaleX = metrics ? metrics.width / BASE_PIN_GEOMETRY.width : 1;
     const scaleY = metrics ? metrics.height / BASE_PIN_GEOMETRY.height : 1;
-    const startX = BASE_PIN_GEOMETRY.startX * scaleX + (metrics?.offsetX || 0);
+    const startX = BASE_PIN_GEOMETRY.startX * scaleX + (metrics?.offsetX || 0) + DEFAULT_PIN_NUDGE.x;
     const spacing = BASE_PIN_GEOMETRY.spacing * scaleX;
     const gap = BASE_PIN_GEOMETRY.gap * scaleX;
-    const y = BASE_PIN_GEOMETRY.y * scaleY + (metrics?.offsetY || 0);
+    const y = BASE_PIN_GEOMETRY.y * scaleY + (metrics?.offsetY || 0) + DEFAULT_PIN_NUDGE.y;
     const mapping = {};
     PIN_ORDER.forEach((pin, i) => {
       let xPos = startX + i * spacing;
@@ -440,8 +445,7 @@ export default function App() {
         </div>
       </div>
     </Errorboundary>
-  );
-}
+} 
 
 // Draggable component UI (controlled Draggable)
 function DraggableComponent({
