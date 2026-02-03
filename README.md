@@ -71,4 +71,4 @@ _Add a screenshot here if you want._
 
 License
 -------
-MIT (or your preferred license)
+MIT
