@@ -5,8 +5,7 @@ import "@wokwi/elements";
 class Errorboundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { error: null };
-  }
+    this.state = { error: null };\n  }
   static getDerivedStateFromError(error) {
     return { error };
   }
@@ -44,8 +43,22 @@ export default function App() {
   const [calibrating, setCalibrating] = useState(false);
   const [calOverlayVisible, setCalOverlayVisible] = useState(false);
 
-  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+  const CAL_STORAGE_KEY = "arduinoPinCalibration";
 
+  useEffect(() => {
+    const saved = localStorage.getItem(CAL_STORAGE_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      setCalMapping(parsed);
+      setCalOverlayVisible(true);
+    } catch (err) {
+      console.warn("Invalid saved calibration, clearing.", err);
+      localStorage.removeItem(CAL_STORAGE_KEY);
+    }
+  }, []);
+
+  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];\n
   const BASE_PIN_GEOMETRY = {
     width: 300,
     height: 200,
@@ -110,8 +123,7 @@ export default function App() {
   };
 
   const getAvailablePins = (currentComponentId) => {
-    const allPins = ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
-    const usedPins = components.filter((c) => c.id !== currentComponentId).map((c) => c.pin).filter(Boolean);
+    const allPins = ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];\n    const usedPins = components.filter((c) => c.id !== currentComponentId).map((c) => c.pin).filter(Boolean);
     return allPins.filter((p) => !usedPins.includes(p));
   };
 
@@ -179,6 +191,7 @@ export default function App() {
       mappingLocal[pin] = { x: xAbs - arduinoComp.x, y: yAvg - arduinoComp.y };
     });
     setCalMapping(mappingLocal);
+    localStorage.setItem(CAL_STORAGE_KEY, JSON.stringify(mappingLocal));
     setCalOverlayVisible(true);
     setCalibrating(false);
     setCalMarkers([]);
@@ -190,6 +203,7 @@ export default function App() {
     setCalMapping(null);
     setCalOverlayVisible(false);
     setCalibrating(false);
+    localStorage.removeItem(CAL_STORAGE_KEY);
   };
 
   // Code generation and download
@@ -221,7 +235,7 @@ export default function App() {
     const dx = ex - cx;
     const dy = ey - cy;
     const candidates = [];
-
+    
     if (Math.abs(dx) > 1e-6) {
       const tLeft = (rect.left - cx) / dx;
       if (tLeft > 0 && tLeft <= 1) {
@@ -324,9 +338,7 @@ export default function App() {
                 const color = comp.type === "BUTTON" ? "blue" : "green";
 
                 return (
-                  <g key={`wire-${comp.id}`}> 
-                    <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />
-                    {(comp.type === "LED" || comp.type === "BUTTON") && (
+                  <g key={`wire-${comp.id}`}>\n                    <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />\n                    {(comp.type === "LED" || comp.type === "BUTTON") && (
                       <g pointerEvents="none">
                         <circle cx={intersect.x} cy={intersect.y} r="6" fill="#fff" />
                         <circle cx={intersect.x} cy={intersect.y} r="3" fill={color} />
