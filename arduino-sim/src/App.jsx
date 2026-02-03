@@ -58,6 +58,21 @@ export default function App() {
     }
   }, []);
 
+  const CAL_STORAGE_KEY = "arduinoPinCalibration";
+
+  useEffect(() => {
+    const saved = localStorage.getItem(CAL_STORAGE_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      setCalMapping(parsed);
+      setCalOverlayVisible(true);
+    } catch (err) {
+      console.warn("Invalid saved calibration, clearing.", err);
+      localStorage.removeItem(CAL_STORAGE_KEY);
+    }
+  }, []);
+
   const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];\n
   const BASE_PIN_GEOMETRY = {
     width: 300,
@@ -164,7 +179,12 @@ export default function App() {
     const y = e.clientY - rect.top;
     calClicksRef.current.push({ x, y });
     setCalMarkers((prev) => [...prev, { x, y, n: calClicksRef.current.length }]);
-    if (calClicksRef.current.length === 3) finalizeCalibrationFromRef();
+
+    if (calClicksRef.current.length >= 3) {
+      finalizeCalibrationFromRef();
+      return;
+    }
+
     e.stopPropagation();
     e.preventDefault();
   };
@@ -338,10 +358,12 @@ export default function App() {
                 const color = comp.type === "BUTTON" ? "blue" : "green";
 
                 return (
-                  <g key={`wire-${comp.id}`}>\n                    <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />\n                    {(comp.type === "LED" || comp.type === "BUTTON") && (
+                  <g key={`wire-${comp.id}`}> 
+                    <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />
+                    {(comp.type === "LED" || comp.type === "BUTTON") && (
                       <g pointerEvents="none">
-                        <circle cx={intersect.x} cy={intersect.y} r="6" fill="#fff" />
-                        <circle cx={intersect.x} cy={intersect.y} r="3" fill={color} />
+                        <circle cx={intersect.x} cy={intersect.y} r={6} fill="#fff" />
+                        <circle cx={intersect.x} cy={intersect.y} r={3} fill={color} />
                       </g>
                     )}
                   </g>
@@ -353,7 +375,7 @@ export default function App() {
               const maskCY = arduino.y + arefOffset.y;
               return (
                 <g key="aref-mask" pointerEvents="none">
-                  <circle cx={maskCX} cy={maskCY} r="4" fill="#fff" stroke="#d1d5db" strokeWidth="0.6" />
+                  <circle cx={maskCX} cy={maskCY} r={4} fill="#fff" stroke="#d1d5db" strokeWidth="0.6" />
                 </g>
               );
             })()}
