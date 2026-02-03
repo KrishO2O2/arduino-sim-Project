@@ -30,7 +30,7 @@ class Errorboundary extends React.Component {
 
 export default function App() {
   const [components, setComponents] = useState([]);
-  const [showCode, setShowCode] = useState(true);
+  const [viewMode, setViewMode] = useState("components");
   const [isSimulating, setIsSimulating] = useState(false);
   const [isButtonPressed, setIsButtonPressed] = useState(false);
   const [isLedOn, setIsLedOn] = useState(false);
@@ -177,23 +177,7 @@ export default function App() {
     const btn = components.find((c) => c.type === "BUTTON");
     const ledPin = led ? led.pin || "10" : "10";
     const btnPin = btn ? btn.pin || "2" : "2";
-    return `// Auto-Generated Code
-const int buttonPin = ${btnPin};
-const int ledPin = ${ledPin};
-
-void setup() {
-  pinMode(buttonPin, INPUT);
-  pinMode(ledPin, OUTPUT);
-}
-
-void loop() {
-  int buttonState = digitalRead(buttonPin);
-  if (buttonState == HIGH) {
-    digitalWrite(ledPin, HIGH);
-  } else {
-    digitalWrite(ledPin, LOW);
-  }
-}`;
+    return `// Auto-Generated Code\nconst int buttonPin = ${btnPin};\nconst int ledPin = ${ledPin};\n\nvoid setup() {\n  pinMode(buttonPin, INPUT);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int buttonState = digitalRead(buttonPin);\n  if (buttonState == HIGH) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n}`;
   };
 
   const downloadCode = () => {
@@ -256,7 +240,7 @@ void loop() {
     workspace: { flex: 1, position: "relative", backgroundColor: "#f3f4f6" },
     toolbar: { position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", backgroundColor: "white", padding: "10px 20px", borderRadius: "8px", display: "flex", gap: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", zIndex: 100 },
     btn: { padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" },
-    codePanel: { position: "absolute", bottom: 0, width: "100%", height: "220px", backgroundColor: "#1e1e1e", color: "#00ff00", padding: "20px", fontFamily: "monospace", borderTop: "4px solid #444", zIndex: 50, display: showCode ? "block" : "none" },
+    codePanel: { position: "absolute", bottom: 0, width: "100%", height: "220px", backgroundColor: "#1e1e1e", color: "#00ff00", padding: "20px", fontFamily: "monospace", borderTop: "4px solid #444", zIndex: 50, display: viewMode === "code" ? "block" : "none" },
     svgLayer: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 10 }
   };
 
@@ -323,7 +307,7 @@ void loop() {
                 const color = comp.type === "BUTTON" ? "blue" : "green";
 
                 return (
-                  <g key={`wire-${comp.id}`}>
+                  <g key={`wire-${comp.id}`}> 
                     <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />
                     {(comp.type === "LED" || comp.type === "BUTTON") && (
                       <g pointerEvents="none">
@@ -375,9 +359,20 @@ void loop() {
               {isSimulating ? "■ Stop" : "▶ Start"}
             </button>
 
-            <button style={{ ...styles.btn, backgroundColor: "#bfdbfe" }} onClick={() => setShowCode(!showCode)}>
-              {showCode ? "Hide Code" : "Show Code"}
-            </button>
+            <div style={{ display: "flex", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}>
+              <button
+                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "components" ? "#bfdbfe" : "#e5e7eb" }}
+                onClick={() => setViewMode("components")}
+              >
+                Component View
+              </button>
+              <button
+                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "code" ? "#bfdbfe" : "#e5e7eb" }}
+                onClick={() => setViewMode("code")}
+              >
+                Code View
+              </button>
+            </div>
 
             <button style={{ ...styles.btn, backgroundColor: calibrating ? "#fde68a" : "#c7f9cc" }} onClick={() => startCalibration()}>
               {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"}
@@ -442,8 +437,7 @@ void loop() {
         </div>
       </div>
     </Errorboundary>
-  );
-}
+} 
 
 // Draggable component UI (controlled Draggable)
 function DraggableComponent({
