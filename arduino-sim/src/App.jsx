@@ -33,6 +33,7 @@ export default function App() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [isButtonPressed, setIsButtonPressed] = useState(false);
   const [isLedOn, setIsLedOn] = useState(false);
+  const [arduinoVisualMetrics, setArduinoVisualMetrics] = useState(null);
 
   const workspaceRef = useRef(null);
 
@@ -43,18 +44,31 @@ export default function App() {
   const [calibrating, setCalibrating] = useState(false);
   const [calOverlayVisible, setCalOverlayVisible] = useState(false);
 
-  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];  
+  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+
+  const BASE_PIN_GEOMETRY = {
+    width: 300,
+    height: 200,
+    startX: 115.5,
+    spacing: 10.2,
+    gap: 18.0,
+    y: 35
+  };
 
   // Default pin offsets
   const generatePinOffsets = () => {
-    const startX = 115.5;
-    const spacing = 10.2;
-    const gap = 18.0;
+    const metrics = arduinoVisualMetrics;
+    const scaleX = metrics ? metrics.width / BASE_PIN_GEOMETRY.width : 1;
+    const scaleY = metrics ? metrics.height / BASE_PIN_GEOMETRY.height : 1;
+    const startX = BASE_PIN_GEOMETRY.startX * scaleX + (metrics?.offsetX || 0);
+    const spacing = BASE_PIN_GEOMETRY.spacing * scaleX;
+    const gap = BASE_PIN_GEOMETRY.gap * scaleX;
+    const y = BASE_PIN_GEOMETRY.y * scaleY + (metrics?.offsetY || 0);
     const mapping = {};
     PIN_ORDER.forEach((pin, i) => {
       let xPos = startX + i * spacing;
       if (i > 6) xPos += gap;
-      mapping[pin] = { x: xPos, y: 35 };
+      mapping[pin] = { x: xPos, y };
     });
     return mapping;
   };
@@ -315,7 +329,7 @@ export default function App() {
                     )}
                   </g>
                 );
-              })} 
+              })}
             {arduino && (() => {
               const arefOffset = pinOffsetsRaw["GND"] || { x: 115.5, y: 35 };
               const maskCX = arduino.x + arefOffset.x;
@@ -325,14 +339,14 @@ export default function App() {
                   <circle cx={maskCX} cy={maskCY} r={4} fill="#fff" stroke="#d1d5db" strokeWidth="0.6" />
                 </g>
               );
-            })()} 
+            })()}
             {calibrating &&
               calMarkers.map((m) => (
                 <g key={`tmp-${m.n}`} transform={`translate(${m.x}, ${m.y})`} pointerEvents="none">
                   <circle r="6" fill="rgba(255,128,0,0.95)" />
                   <text x="0" y="4" fontSize="10" fontFamily="Arial" fill="#fff" textAnchor="middle" alignmentBaseline="middle">{m.n}</text>
                 </g>
-              ))} 
+              ))}
             {calOverlayVisible && calMapping && arduino &&
               Object.entries(calMapping).map(([name, local]) => {
                 const cx = arduino.x + local.x;
@@ -342,88 +356,89 @@ export default function App() {
                     <circle r="4" fill="rgba(0,160,60,0.95)" stroke="#083" strokeWidth="0.8" />
                   </g>
                 );
-              })} 
+              })}
           </svg>
 
-          <div style={styles.toolbar}> 
-            <button style={{ ...styles.btn, backgroundColor: isSimulating ? "#fca5a5" : "#86efac" }} onClick={() => setIsSimulating(!isSimulating)}>  
-              {isSimulating ? "■ Stop" : "▶ Start"} 
+          <div style={styles.toolbar}>
+            <button style={{ ...styles.btn, backgroundColor: isSimulating ? "#fca5a5" : "#86efac" }} onClick={() => setIsSimulating(!isSimulating)}>
+              {isSimulating ? "■ Stop" : "▶ Start"}
             </button>
 
-            <div style={{ display: "flex", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}> 
-              <button  
-                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "components" ? "#bfdbfe" : "#e5e7eb" }} 
-                onClick={() => setViewMode("components")}  
+            <div style={{ display: "flex", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}>
+              <button
+                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "components" ? "#bfdbfe" : "#e5e7eb" }}
+                onClick={() => setViewMode("components")}
               >
                 Component View
-              </button> 
-              <button  
-                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "code" ? "#bfdbfe" : "#e5e7eb" }} 
-                onClick={() => setViewMode("code")}  
+              </button>
+              <button
+                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "code" ? "#bfdbfe" : "#e5e7eb" }}
+                onClick={() => setViewMode("code")}
               >
                 Code View
-              </button> 
-            </div> 
+              </button>
+            </div>
 
-            <button style={{ ...styles.btn, backgroundColor: calibrating ? "#fde68a" : "#c7f9cc" }} onClick={() => startCalibration()}>  
-              {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"} 
-            </button> 
+            <button style={{ ...styles.btn, backgroundColor: calibrating ? "#fde68a" : "#c7f9cc" }} onClick={() => startCalibration()}>
+              {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"}
+            </button>
 
-            <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}>  
-              Clear Calibration 
-            </button> 
+            <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}>
+              Clear Calibration
+            </button>
 
-            <button style={{ ...styles.btn, backgroundColor: "#d1fae5" }} onClick={downloadCode}>  
-              Download .ino 
-            </button> 
-          </div> 
+            <button style={{ ...styles.btn, backgroundColor: "#d1fae5" }} onClick={downloadCode}>
+              Download .ino
+            </button>
+          </div>
 
-          {calibrating && ( 
-            <div 
-              onPointerDown={onCalibrationPointerDown} 
-              style={{ 
-                position: "fixed", 
-                left: 0, 
-                top: 0, 
-                width: "100vw", 
-                height: "100vh", 
-                zIndex: 99999, 
-                background: "rgba(255,255,255,0.01)", 
-                pointerEvents: "auto", 
-                userSelect: "none", 
-                display: "flex", 
-                alignItems: "flex-start", 
-                justifyContent: "center" 
-              }} 
-            > 
-              <div style={{ marginTop: 12, padding: "6px 10px", background: "rgba(0,0,0,0.65)", color: "#fff", borderRadius: 6, fontSize: 13 }}> 
-                Calibration active — click GND → Pin 8 → Pin 2 (shield) 
-              </div>  
-            </div>  
-          )} 
+          {calibrating && (
+            <div
+              onPointerDown={onCalibrationPointerDown}
+              style={{
+                position: "fixed",
+                left: 0,
+                top: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 99999,
+                background: "rgba(255,255,255,0.01)",
+                pointerEvents: "auto",
+                userSelect: "none",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "center"
+              }}
+            >
+              <div style={{ marginTop: 12, padding: "6px 10px", background: "rgba(0,0,0,0.65)", color: "#fff", borderRadius: 6, fontSize: 13 }}>
+                Calibration active — click GND → Pin 8 → Pin 2 (shield)
+              </div>
+            </div>
+          )}
 
-          {components.map((comp) => ( 
-            <DraggableComponent 
-              key={comp.id} 
-              data={comp} 
-              updatePosition={updatePosition} 
-              updatePin={updatePin} 
-              isLedOn={isLedOn} 
-              setIsButtonPressed={setIsButtonPressed} 
-              availablePins={getAvailablePins(comp.id)} 
-              dragDisabled={calibrating} 
-              hasWokwiArduino={hasWokwiArduino} 
-              hasWokwiLed={hasWokwiLed} 
-              hasWokwiButton={hasWokwiButton}  
-            /> 
+          {components.map((comp) => (
+            <DraggableComponent
+              key={comp.id}
+              data={comp}
+              updatePosition={updatePosition}
+              updatePin={updatePin}
+              isLedOn={isLedOn}
+              setIsButtonPressed={setIsButtonPressed}
+              availablePins={getAvailablePins(comp.id)}
+              dragDisabled={calibrating}
+              hasWokwiArduino={hasWokwiArduino}
+              hasWokwiLed={hasWokwiLed}
+              hasWokwiButton={hasWokwiButton}
+              onArduinoMeasure={comp.type === "ARDUINO" ? setArduinoVisualMetrics : undefined}
+            />
           ))}
 
-          <div style={styles.codePanel}>  
+          <div style={styles.codePanel}>
             <h3 style={{ color: "#00ff6a", marginTop: 0 }}>Arduino Code (Generated)</h3>
-            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{generateCode()}</pre> 
-          </div> 
-        </div> 
-      </div> 
+            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{generateCode()}</pre>
+          </div>
+        </div>
+      </div>
     </Errorboundary>
   );
 }
@@ -439,9 +454,35 @@ function DraggableComponent({
   dragDisabled,
   hasWokwiArduino,
   hasWokwiLed,
-  hasWokwiButton
+  hasWokwiButton,
+  onArduinoMeasure
 }) {
   const nodeRef = useRef(null);
+  const arduinoRef = useRef(null);
+
+  useEffect(() => {
+    if (data.type !== "ARDUINO" || !onArduinoMeasure || !arduinoRef.current || !nodeRef.current) return;
+    const update = () => {
+      if (!arduinoRef.current || !nodeRef.current) return;
+      const cardRect = nodeRef.current.getBoundingClientRect();
+      const arduinoRect = arduinoRef.current.getBoundingClientRect();
+      onArduinoMeasure({
+        width: arduinoRect.width,
+        height: arduinoRect.height,
+        offsetX: arduinoRect.left - cardRect.left,
+        offsetY: arduinoRect.top - cardRect.top
+      });
+    };
+    update();
+    const raf = requestAnimationFrame(update);
+    const timeout = setTimeout(update, 300);
+    window.addEventListener("resize", update);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timeout);
+      window.removeEventListener("resize", update);
+    };
+  }, [data.type, onArduinoMeasure]);
 
   // numeric sort for pins, keep non-numeric like "GND" first
   const pinValue = (p) => {
@@ -480,20 +521,26 @@ function DraggableComponent({
 
         <div style={{ padding: 10, minWidth: 90 }}>
           {data.type === "ARDUINO" && (
-            hasWokwiArduino ? <wokwi-arduino-uno></wokwi-arduino-uno> : <div style={{ width: 120, height: 90, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #ddd" }}>Arduino</div>
+            <div ref={arduinoRef} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {hasWokwiArduino ? (
+                <wokwi-arduino-uno></wokwi-arduino-uno>
+              ) : (
+                <div style={{ width: 120, height: 90, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #ddd" }}>Arduino</div>
+              )}
+            </div>
           )}
 
           {data.type === "LED" && (
-            <> 
+            <>
               {hasWokwiLed ? <wokwi-led color="red" value={isLedOn ? 1 : 0}></wokwi-led> : <div style={{ width: 20, height: 20, borderRadius: 10, background: isLedOn ? "red" : "#420000" }} />}
               <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
-                {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)}
+                {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)})
               </select>
             </>
           )}
 
           {data.type === "BUTTON" && (
-            <> 
+            <>
               <div
                 onPointerDown={() => setIsButtonPressed(true)}
                 onPointerUp={() => setIsButtonPressed(false)}
@@ -503,7 +550,7 @@ function DraggableComponent({
                 {hasWokwiButton ? <wokwi-pushbutton></wokwi-pushbutton> : <div style={{ width: 36, height: 24, background: "#ddd", borderRadius: 4 }} />}
               </div>
               <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
-                {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)}
+                {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)})
               </select>
             </>
           )}
