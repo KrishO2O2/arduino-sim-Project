@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import Draggable from "react-draggable";
 import "@wokwi/elements";
 
-
 class Errorboundary extends React.Component {
   constructor(props) {
     super(props);
@@ -44,7 +43,7 @@ export default function App() {
   const [calibrating, setCalibrating] = useState(false);
   const [calOverlayVisible, setCalOverlayVisible] = useState(false);
 
-  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];  
 
   // Default pin offsets
   const generatePinOffsets = () => {
@@ -72,7 +71,10 @@ export default function App() {
     let pin = undefined;
     if (type === "LED") pin = "10";
     if (type === "BUTTON") pin = "2";
-    setComponents((prev) => [...prev, { id: newId, type, x: 100 + prev.length * 20, y: 100 + prev.length * 20, pin }]);
+    setComponents((prev) => [
+      ...prev,
+      { id: newId, type, x: 100 + prev.length * 20, y: 100 + prev.length * 20, pin }
+    ]);
   };
 
   const updatePosition = (id, x, y) => {
@@ -94,7 +96,7 @@ export default function App() {
     return allPins.filter((p) => !usedPins.includes(p));
   };
 
-  //LED follows button press when running
+  // LED follows button press when running
   useEffect(() => {
     if (isSimulating) {
       const btn = components.find((c) => c.type === "BUTTON");
@@ -263,11 +265,9 @@ export default function App() {
         <div ref={workspaceRef} style={styles.workspace}>
           <svg style={styles.svgLayer}>
             {components
-              .filter((comp) => comp.type !== "ARDUINO" && comp.pin) // only render wires for components that actually have a pin
+              .filter((comp) => comp.type !== "ARDUINO" && comp.pin)
               .map((comp) => {
                 if (!arduino) return null;
-
-                // Arduino pin endpoint (choose calibrated mapping if present)
                 const pin = comp.pin;
                 if (!pin) return null;
 
@@ -281,7 +281,6 @@ export default function App() {
                   endY = arduino.y + pinOffset.y;
                 }
 
-                // Component bounding box (approximate)
                 const cardWidth = 110;
                 const cardHeight = 100;
                 const rect = { left: comp.x, top: comp.y, width: cardWidth, height: cardHeight };
@@ -295,7 +294,6 @@ export default function App() {
                 let dy = endY - intersect.y;
                 let dist = Math.hypot(dx, dy) || 1;
 
-                // polish: shorten both ends a bit
                 const compShort = 6;
                 const ardShort = 3;
 
@@ -317,9 +315,7 @@ export default function App() {
                     )}
                   </g>
                 );
-              })}
-
-            {/* A small white mask near Arduino top-left to hide stray stub */}
+              })} 
             {arduino && (() => {
               const arefOffset = pinOffsetsRaw["GND"] || { x: 115.5, y: 35 };
               const maskCX = arduino.x + arefOffset.x;
@@ -329,18 +325,14 @@ export default function App() {
                   <circle cx={maskCX} cy={maskCY} r={4} fill="#fff" stroke="#d1d5db" strokeWidth="0.6" />
                 </g>
               );
-            })()}
-
-            {/* Temporary calibration markers */}
+            })()} 
             {calibrating &&
               calMarkers.map((m) => (
                 <g key={`tmp-${m.n}`} transform={`translate(${m.x}, ${m.y})`} pointerEvents="none">
                   <circle r="6" fill="rgba(255,128,0,0.95)" />
                   <text x="0" y="4" fontSize="10" fontFamily="Arial" fill="#fff" textAnchor="middle" alignmentBaseline="middle">{m.n}</text>
                 </g>
-              ))}
-
-            {/* Final calibration markers */}
+              ))} 
             {calOverlayVisible && calMapping && arduino &&
               Object.entries(calMapping).map(([name, local]) => {
                 const cx = arduino.x + local.x;
@@ -350,94 +342,91 @@ export default function App() {
                     <circle r="4" fill="rgba(0,160,60,0.95)" stroke="#083" strokeWidth="0.8" />
                   </g>
                 );
-              })}
+              })} 
           </svg>
 
-          {/* Toolbar */}
-          <div style={styles.toolbar}>
-            <button style={{ ...styles.btn, backgroundColor: isSimulating ? "#fca5a5" : "#86efac" }} onClick={() => setIsSimulating(!isSimulating)}>
-              {isSimulating ? "■ Stop" : "▶ Start"}
+          <div style={styles.toolbar}> 
+            <button style={{ ...styles.btn, backgroundColor: isSimulating ? "#fca5a5" : "#86efac" }} onClick={() => setIsSimulating(!isSimulating)}>  
+              {isSimulating ? "■ Stop" : "▶ Start"} 
             </button>
 
-            <div style={{ display: "flex", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}>
-              <button
-                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "components" ? "#bfdbfe" : "#e5e7eb" }}
-                onClick={() => setViewMode("components")}
+            <div style={{ display: "flex", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}> 
+              <button  
+                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "components" ? "#bfdbfe" : "#e5e7eb" }} 
+                onClick={() => setViewMode("components")}  
               >
                 Component View
-              </button>
-              <button
-                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "code" ? "#bfdbfe" : "#e5e7eb" }}
-                onClick={() => setViewMode("code")}
+              </button> 
+              <button  
+                style={{ ...styles.btn, borderRadius: 0, backgroundColor: viewMode === "code" ? "#bfdbfe" : "#e5e7eb" }} 
+                onClick={() => setViewMode("code")}  
               >
                 Code View
-              </button>
-            </div>
+              </button> 
+            </div> 
 
-            <button style={{ ...styles.btn, backgroundColor: calibrating ? "#fde68a" : "#c7f9cc" }} onClick={() => startCalibration()}>
-              {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"}
-            </button>
+            <button style={{ ...styles.btn, backgroundColor: calibrating ? "#fde68a" : "#c7f9cc" }} onClick={() => startCalibration()}>  
+              {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"} 
+            </button> 
 
-            <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}>
-              Clear Calibration
-            </button>
+            <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}>  
+              Clear Calibration 
+            </button> 
 
-            <button style={{ ...styles.btn, backgroundColor: "#d1fae5" }} onClick={downloadCode}>
-              Download .ino
-            </button>
-          </div>
+            <button style={{ ...styles.btn, backgroundColor: "#d1fae5" }} onClick={downloadCode}>  
+              Download .ino 
+            </button> 
+          </div> 
 
-          {/* Calibration shield */}
-          {calibrating && (
-            <div
-              onPointerDown={onCalibrationPointerDown}
-              style={{
-                position: "fixed",
-                left: 0,
-                top: 0,
-                width: "100vw",
-                height: "100vh",
-                zIndex: 99999,
-                background: "rgba(255,255,255,0.01)",
-                pointerEvents: "auto",
-                userSelect: "none",
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "center"
-              }}
-            >
-              <div style={{ marginTop: 12, padding: "6px 10px", background: "rgba(0,0,0,0.65)", color: "#fff", borderRadius: 6, fontSize: 13 }}>
-                Calibration active — click GND → Pin 8 → Pin 2 (shield)
-              </div>
-            </div>
-          )}
+          {calibrating && ( 
+            <div 
+              onPointerDown={onCalibrationPointerDown} 
+              style={{ 
+                position: "fixed", 
+                left: 0, 
+                top: 0, 
+                width: "100vw", 
+                height: "100vh", 
+                zIndex: 99999, 
+                background: "rgba(255,255,255,0.01)", 
+                pointerEvents: "auto", 
+                userSelect: "none", 
+                display: "flex", 
+                alignItems: "flex-start", 
+                justifyContent: "center" 
+              }} 
+            > 
+              <div style={{ marginTop: 12, padding: "6px 10px", background: "rgba(0,0,0,0.65)", color: "#fff", borderRadius: 6, fontSize: 13 }}> 
+                Calibration active — click GND → Pin 8 → Pin 2 (shield) 
+              </div>  
+            </div>  
+          )} 
 
-          {/* Draggable components */}
-          {components.map((comp) => (
-            <DraggableComponent
-              key={comp.id}
-              data={comp}
-              updatePosition={updatePosition}
-              updatePin={updatePin}
-              isLedOn={isLedOn}
-              setIsButtonPressed={setIsButtonPressed}
-              availablePins={getAvailablePins(comp.id)}
-              dragDisabled={calibrating}
-              hasWokwiArduino={hasWokwiArduino}
-              hasWokwiLed={hasWokwiLed}
-              hasWokwiButton={hasWokwiButton}
-            />
+          {components.map((comp) => ( 
+            <DraggableComponent 
+              key={comp.id} 
+              data={comp} 
+              updatePosition={updatePosition} 
+              updatePin={updatePin} 
+              isLedOn={isLedOn} 
+              setIsButtonPressed={setIsButtonPressed} 
+              availablePins={getAvailablePins(comp.id)} 
+              dragDisabled={calibrating} 
+              hasWokwiArduino={hasWokwiArduino} 
+              hasWokwiLed={hasWokwiLed} 
+              hasWokwiButton={hasWokwiButton}  
+            /> 
           ))}
 
-          {/* Code panel */}
-          <div style={styles.codePanel}>
+          <div style={styles.codePanel}>  
             <h3 style={{ color: "#00ff6a", marginTop: 0 }}>Arduino Code (Generated)</h3>
-            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{generateCode()}</pre>
-          </div>
-        </div>
-      </div>
+            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{generateCode()}</pre> 
+          </div> 
+        </div> 
+      </div> 
     </Errorboundary>
-} 
+  );
+}
 
 // Draggable component UI (controlled Draggable)
 function DraggableComponent({
@@ -495,7 +484,7 @@ function DraggableComponent({
           )}
 
           {data.type === "LED" && (
-            <>
+            <> 
               {hasWokwiLed ? <wokwi-led color="red" value={isLedOn ? 1 : 0}></wokwi-led> : <div style={{ width: 20, height: 20, borderRadius: 10, background: isLedOn ? "red" : "#420000" }} />}
               <select value={data.pin || ""} onChange={(e) => updatePin(data.id, e.target.value)} style={{ marginTop: 6, fontSize: 12, width: "100%" }}>
                 {dropdownOptions.map((p) => <option key={p} value={p}>Pin {p}</option>)}
@@ -504,7 +493,7 @@ function DraggableComponent({
           )}
 
           {data.type === "BUTTON" && (
-            <>
+            <> 
               <div
                 onPointerDown={() => setIsButtonPressed(true)}
                 onPointerUp={() => setIsButtonPressed(false)}
