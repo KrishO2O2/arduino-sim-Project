@@ -1,74 +1,82 @@
-Arduino Sim Project
-===================
+# Arduino Sim Project
 
-A browser-based Arduino component simulator built with React.  
-Drag and drop components, wire them virtually, simulate LED/button behavior, and auto-generate Arduino code.
+A browser-based Arduino component simulator built with React.
 
-Features
---------
+- **Drag and drop** Arduino Uno, LED, and Push Button components from a palette.
+- Visually wire components virtually in a workspace.
+- Simulate LED/Button behavior.
+- Generate downloadable Arduino `.ino` source code for your virtual circuit.
 
-- Drag-and-drop Arduino Uno, LED, and Button components
-- Auto-wire visualization between components and pins
-- Component vs Code View toggle
-- Arduino code generation + download (`.ino`)
-- Pin calibration system for accurate wiring
-- Simulation mode for LED/Button interaction
+## Features
 
-Tech Stack
-----------
+- **Intuitive Drag-and-Drop Palette**  
+  Drag Arduino Uno, LED, and Push Button directly from the left sidebar into your workspace.  
+  Live ghost/preview supports precise placement.
 
-- React
-- Vite
-- @wokwi/elements
-- react-draggable
+- **Component Simulation**  
+  - Components can be moved around freely once placed.
+  - Unique constraints: Only one Arduino Uno per project.
+  - LED follows button state when circuit is simulated.
 
-Getting Started
----------------
+- **Pin Calibration and Visualization**  
+  - Virtual pin calibration for Arduino Uno physical layout.
+  - Wire rendering between components and Arduino pins.
 
-1) Install dependencies
-```bash
-npm install
-```
+- **Auto-Code Generation**  
+  - Instantly generates Arduino `.ino` code matching your virtual circuit.
+  - Includes pin mappings for all placed LEDs and Buttons.
+  - Download code with a single click.
 
-2) Run the app
-```bash
-npm run dev
-```
+## Usage
 
-Open `http://localhost:5173` in your browser.
+1. **Clone & Install**
+   ```sh
+   git clone https://github.com/KrishO2O2/arduino-sim-Project.git
+   cd arduino-sim-Project/arduino-sim
+   npm install
+   ```
+2. **Run Locally**
+   ```sh
+   npm run dev
+   ```
+   Then open the local address in your browser (usually `http://localhost:5173`).
 
-Project Structure
------------------
+3. **Build**
+   ```sh
+   npm run build
+   ```
 
-```
-arduino-sim/
-  src/
-    App.jsx
-    App.css
-    main.jsx
-  public/
-```
+## How to Use
 
-Usage
------
+1. **Drag Components**:  
+   - Grab an item from the **Component Palette** (left).
+   - Drag it into the workspace to add and place a new Arduino, LED, or Button.
+2. **Wire Up**:  
+   - Wires appear automatically between components and the Arduino using chosen pins.
+   - Only one Arduino Uno allowed.
+3. **Simulate**:  
+   - Click **Start** to run the simulation (LED and button will interact).
+   - **Stop** to pause simulation.
+4. **Pin Calibration**:  
+   - Optionally calibrate pin layout for visual accuracy.
+5. **Download Arduino Code**:  
+   - Switch to **Code View** to preview generated code.
+   - Click **Download .ino** to save and use in the Arduino IDE.
 
-1. Click **+ Arduino**, **+ LED**, or **+ Button** from the palette.
-2. Drag components around the canvas.
-3. Use **Component View / Code View** to switch modes.
-4. Click **Start** to simulate behavior.
-5. Download auto-generated Arduino code with **Download .ino**.
+## Screenshots
 
-Notes
------
+<!-- Add screenshots of the simulator here, if desired -->
 
-- Only one Arduino board can be added.
-- Pin conflicts are prevented automatically.
+## Project Structure
 
-Screenshot
-----------
+- `src/App.jsx` – Main React component logic & drag-and-drop implementation
+- `public/` – Static assets
+- `arduino-sim/` – App source code
 
-_Add a screenshot here if you want._
+## License
 
-License
--------
 MIT
+
+---
+
+**Made by [KrishO2O2](https://github.com/KrishO2O2)**
