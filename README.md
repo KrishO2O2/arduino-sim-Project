@@ -65,7 +65,8 @@ A browser-based Arduino component simulator built with React.
 
 ## Screenshots
 
-![Uploading Screenshot 2026-02-04 at 10.55.14 PM.png…]()
+<img width="1440" height="900" alt="Screenshot 2026-02-04 at 10 59 07 PM" src="https://github.com/user-attachments/assets/d1db08c1-5e37-4ab2-877e-c5c7e74f6879" />
+
 
 
 ## Project Structure
