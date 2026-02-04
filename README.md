@@ -80,10 +80,7 @@ npm run build
 ---
 
 ## Screenshots
-```
 <img width="1440" height="900" alt="Screenshot 2026-02-05 at 12 01 23 AM" src="https://github.com/user-attachments/assets/cdd4e402-f101-4902-9dc7-c0548dfbbdb5" />
-
-```
 
 ---
 
