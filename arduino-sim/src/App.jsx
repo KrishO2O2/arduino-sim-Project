@@ -5,7 +5,8 @@ import "@wokwi/elements";
 class Errorboundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { error: null };\n  }
+    this.state = { error: null };
+  }
   static getDerivedStateFromError(error) {
     return { error };
   }
@@ -43,20 +44,9 @@ export default function App() {
   const [calibrating, setCalibrating] = useState(false);
   const [calOverlayVisible, setCalOverlayVisible] = useState(false);
 
-  const CAL_STORAGE_KEY = "arduinoPinCalibration";
-
-  useEffect(() => {
-    const saved = localStorage.getItem(CAL_STORAGE_KEY);
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved);
-      setCalMapping(parsed);
-      setCalOverlayVisible(true);
-    } catch (err) {
-      console.warn("Invalid saved calibration, clearing.", err);
-      localStorage.removeItem(CAL_STORAGE_KEY);
-    }
-  }, []);
+  // Drag-and-drop palette state
+  const [dragType, setDragType] = useState(null);
+  const [dragPreviewPos, setDragPreviewPos] = useState(null);
 
   const CAL_STORAGE_KEY = "arduinoPinCalibration";
 
@@ -73,7 +63,8 @@ export default function App() {
     }
   }, []);
 
-  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];\n
+  const PIN_ORDER = ["GND", "13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+
   const BASE_PIN_GEOMETRY = {
     width: 300,
     height: 200,
@@ -83,10 +74,7 @@ export default function App() {
     y: 38.8283
   };
 
-  const DEFAULT_PIN_NUDGE = {
-    x: 0,
-    y: 0
-  };
+  const DEFAULT_PIN_NUDGE = { x: 0, y: 0 };
 
   // Default pin offsets (scale to actual Arduino element size)
   const generatePinOffsets = () => {
@@ -109,20 +97,59 @@ export default function App() {
 
   // Helpers
   const findArduino = () => components.find((c) => c.type === "ARDUINO");
-  const addComponent = (type) => {
-    if (components.find((c) => c.type === type)) {
-      alert(`You can only have one ${type} in this exercise.`);
+
+  // DRAG AND DROP PALETTE SUPPORT
+  const handlePaletteDragStart = (type, event) => {
+    setDragType(type);
+    // Hide default drag ghost
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "copy";
+      const img = new window.Image();
+      img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2'%3E%3C/svg%3E";
+      event.dataTransfer.setDragImage(img, 0, 0);
+    }
+  };
+  const handlePaletteDragEnd = () => {
+    setDragType(null);
+    setDragPreviewPos(null);
+  };
+  const handleWorkspaceDragOver = (e) => {
+    e.preventDefault();
+    if (dragType && workspaceRef.current) {
+      const rect = workspaceRef.current.getBoundingClientRect();
+      setDragPreviewPos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
+  const handleWorkspaceDrop = (e) => {
+    e.preventDefault();
+    if (!dragType || !workspaceRef.current) return;
+    const rect = workspaceRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // Only allow one Arduino
+    if (dragType === "ARDUINO" && components.find(c => c.type === "ARDUINO")) {
+      alert("You can only have one Arduino.");
+      setDragType(null);
+      setDragPreviewPos(null);
       return;
     }
-    const newId = Date.now() + Math.floor(Math.random() * 1000);
+    // Set default pin
     let pin = undefined;
-    if (type === "LED") pin = "10";
-    if (type === "BUTTON") pin = "2";
-    setComponents((prev) => [
+    if (dragType === "LED") pin = "10";
+    if (dragType === "BUTTON") pin = "2";
+    setComponents(prev => [
       ...prev,
-      { id: newId, type, x: 100 + prev.length * 20, y: 100 + prev.length * 20, pin }
+      { id: Date.now() + Math.floor(Math.random() * 1000), type: dragType, x: x - 55, y: y - 50, pin }
     ]);
+    setDragType(null);
+    setDragPreviewPos(null);
   };
+
+  // --- The below click-to-add logic is now obsolete ---
+  const addComponent = (type) => { };
 
   const updatePosition = (id, x, y) => {
     setComponents((prev) => prev.map((c) => (c.id === id ? { ...c, x, y } : c)));
@@ -138,7 +165,8 @@ export default function App() {
   };
 
   const getAvailablePins = (currentComponentId) => {
-    const allPins = ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];\n    const usedPins = components.filter((c) => c.id !== currentComponentId).map((c) => c.pin).filter(Boolean);
+    const allPins = ["13", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+    const usedPins = components.filter((c) => c.id !== currentComponentId).map((c) => c.pin).filter(Boolean);
     return allPins.filter((p) => !usedPins.includes(p));
   };
 
@@ -255,7 +283,7 @@ export default function App() {
     const dx = ex - cx;
     const dy = ey - cy;
     const candidates = [];
-    
+
     if (Math.abs(dx) > 1e-6) {
       const tLeft = (rect.left - cx) / dx;
       if (tLeft > 0 && tLeft <= 1) {
@@ -291,8 +319,8 @@ export default function App() {
   const styles = {
     layout: { display: "flex", height: "100vh", fontFamily: "sans-serif", overflow: "hidden" },
     palette: { width: "250px", backgroundColor: "#e5e7eb", borderRight: "2px solid #9ca3af", padding: "20px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 20 },
-    paletteItem: { padding: "15px", backgroundColor: "white", border: "1px solid #d1d5db", borderRadius: "5px", cursor: "pointer", textAlign: "center", fontWeight: "bold", boxShadow: "0 2px 2px rgba(0,0,0,0.1)" },
-    workspace: { flex: 1, position: "relative", backgroundColor: "#f3f4f6" },
+    paletteItem: { padding: "15px", backgroundColor: "white", border: "1px solid #d1d5db", borderRadius: "5px", cursor: "grab", textAlign: "center", fontWeight: "bold", boxShadow: "0 2px 2px rgba(0,0,0,0.1)", userSelect: "none" },
+    workspace: { flex: 1, position: "relative", backgroundColor: "#f3f4f6" }, // don't set pointerEvents: none
     toolbar: { position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", backgroundColor: "white", padding: "10px 20px", borderRadius: "8px", display: "flex", gap: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", zIndex: 100 },
     btn: { padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" },
     codePanel: { position: "absolute", bottom: 0, width: "100%", height: "220px", backgroundColor: "#1e1e1e", color: "#00ff00", padding: "20px", fontFamily: "monospace", borderTop: "4px solid #444", zIndex: 50, display: viewMode === "code" ? "block" : "none" },
@@ -310,12 +338,70 @@ export default function App() {
         <div style={styles.palette}>
           <h3>Component Palette</h3>
           <p style={{ fontSize: "11px", color: "#666" }}>Arduino, LED, Push Button</p>
-          <div style={styles.paletteItem} onClick={() => addComponent("ARDUINO")}>+ Arduino Uno</div>
-          <div style={styles.paletteItem} onClick={() => addComponent("LED")}>+ LED (Red)</div>
-          <div style={styles.paletteItem} onClick={() => addComponent("BUTTON")}>+ Push Button</div>
+          <div
+            style={styles.paletteItem}
+            draggable="true"
+            onDragStart={e => handlePaletteDragStart("ARDUINO", e)}
+            onDragEnd={handlePaletteDragEnd}
+            tabIndex={0}
+          >+ Arduino Uno</div>
+          <div
+            style={styles.paletteItem}
+            draggable="true"
+            onDragStart={e => handlePaletteDragStart("LED", e)}
+            onDragEnd={handlePaletteDragEnd}
+            tabIndex={0}
+          >+ LED (Red)</div>
+          <div
+            style={styles.paletteItem}
+            draggable="true"
+            onDragStart={e => handlePaletteDragStart("BUTTON", e)}
+            onDragEnd={handlePaletteDragEnd}
+            tabIndex={0}
+          >+ Push Button</div>
         </div>
 
-        <div ref={workspaceRef} style={styles.workspace}>
+        <div
+          ref={workspaceRef}
+          style={styles.workspace}
+          onDragOver={handleWorkspaceDragOver}
+          onDrop={handleWorkspaceDrop}
+        >
+          {/* Drag Preview */}
+          {dragType && dragPreviewPos && (
+            <div
+              style={{
+                position: "absolute",
+                left: dragPreviewPos.x - 55,
+                top: dragPreviewPos.y - 50,
+                pointerEvents: "none",
+                opacity: 0.8,
+                zIndex: 2000,
+                width: 110,
+                height: 100,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              {dragType === "ARDUINO" && (
+                hasWokwiArduino
+                  ? <wokwi-arduino-uno style={{ filter: "grayscale(1)", opacity: 0.65, width: 110, height: 80 }} />
+                  : <div style={{ width: 110, height: 80, background: "#80deea", border: "2px dashed #0288d1", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>Arduino</div>
+              )}
+              {dragType === "LED" && (
+                hasWokwiLed
+                  ? <wokwi-led color="red" value="1" style={{ transform: "scale(2)", opacity: 0.7 }} />
+                  : <div style={{ width: 40, height: 40, borderRadius: 20, background: "red", border: "2px dashed #a00", boxShadow: "0 0 8px #f00" }} />
+              )}
+              {dragType === "BUTTON" && (
+                hasWokwiButton
+                  ? <wokwi-pushbutton style={{ transform: "scale(1.3)", opacity: 0.7 }} />
+                  : <div style={{ width: 50, height: 30, border: "2px dashed #333", background: "#ddd", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{fontSize: 16}}>Button</span></div>
+              )}
+            </div>
+          )}
+
           <svg style={styles.svgLayer}>
             {components
               .filter((comp) => comp.type !== "ARDUINO" && comp.pin)
@@ -358,7 +444,7 @@ export default function App() {
                 const color = comp.type === "BUTTON" ? "blue" : "green";
 
                 return (
-                  <g key={`wire-${comp.id}`}> 
+                  <g key={`wire-${comp.id}`}>
                     <line x1={startX} y1={startY} x2={endXVis} y2={endYVis} stroke={color} strokeWidth="3" strokeLinecap="round" />
                     {(comp.type === "LED" || comp.type === "BUTTON") && (
                       <g pointerEvents="none">
@@ -421,11 +507,9 @@ export default function App() {
             <button style={{ ...styles.btn, backgroundColor: calibrating ? "#fde68a" : "#c7f9cc" }} onClick={() => startCalibration()}>
               {calibrating ? "Click GND → 8 → 2" : "Calibrate Pins"}
             </button>
-
             <button style={{ ...styles.btn, backgroundColor: "#fee2e2" }} onClick={() => clearCalibration()}>
               Clear Calibration
             </button>
-
             <button style={{ ...styles.btn, backgroundColor: "#d1fae5" }} onClick={downloadCode}>
               Download .ino
             </button>
@@ -523,7 +607,6 @@ function DraggableComponent({
     };
   }, [data.type, onArduinoMeasure]);
 
-  // numeric sort for pins, keep non-numeric like "GND" first
   const pinValue = (p) => {
     if (p === undefined || p === null) return Number.POSITIVE_INFINITY;
     if (p === "GND") return -1;
