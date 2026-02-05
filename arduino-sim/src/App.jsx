@@ -323,7 +323,7 @@ export default function App() {
     workspace: { flex: 1, position: "relative", backgroundColor: "#f3f4f6" }, // don't set pointerEvents: none
     toolbar: { position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", backgroundColor: "white", padding: "10px 20px", borderRadius: "8px", display: "flex", gap: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", zIndex: 100 },
     btn: { padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold" },
-    codePanel: { position: "absolute", bottom: 0, width: "100%", height: "220px", backgroundColor: "#1e1e1e", color: "#00ff00", padding: "20px", fontFamily: "monospace", borderTop: "4px solid #444", zIndex: 50, display: viewMode === "code" ? "block" : "none" },
+    codePanel: { position: "absolute", bottom: 0, width: "100%", height: "290px", backgroundColor: "#1e1e1e", color: "#00ff00", padding: "20px", fontFamily: "monospace", borderTop: "4px solid #444", zIndex: 50, display: viewMode === "code" ? "block" : "none", overflowY: "auto" },
     svgLayer: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 10 }
   };
 
